@@ -6,32 +6,31 @@
 #include "FreeCameraController.h"
 
 // 揺れもの処理(ロープ)シーン
-class PhysicsRopeScene : public Scene
-{
-public:
-	PhysicsRopeScene();
-	~PhysicsRopeScene() override = default;
+class PhysicsRopeScene : public Scene {
+ public:
+  PhysicsRopeScene();
+  ~PhysicsRopeScene() override = default;
 
-	// 更新処理
-	void Update(float elapsedTime) override;
+  // 更新処理
+  void Update(float elapsedTime) override;
 
-	// 描画処理
-	void Render(float elapsedTime) override;
+  // 描画処理
+  void Render(float elapsedTime) override;
 
-	// GUI描画処理
-	void DrawGUI() override;
+  // GUI描画処理
+  void DrawGUI() override;
 
-private:
-	struct Joint
-	{
-		DirectX::XMFLOAT3	position;
-		DirectX::XMFLOAT3	oldPosition;
-	};
+ private:
+  struct Joint {
+    DirectX::XMFLOAT3 position;
+    DirectX::XMFLOAT3 oldPosition;
+  };
 
-	Camera								camera;
-	FreeCameraController				cameraController;
+  Camera camera;
+  FreeCameraController cameraController;
 
-	float		jointInterval = 1.0f;
-	Joint		joints[5];
-	float		gravity = 0.3f;
+  float jointInterval = 1.0f;
+  Joint joints[5];
+  float gravity = 0.3f;
+  bool fixRootJoint = true;  // 根元のジョイントを固定するかどうか
 };

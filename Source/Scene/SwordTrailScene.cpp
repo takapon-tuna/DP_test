@@ -5,21 +5,21 @@
 // コンストラクタ
 SwordTrailScene::SwordTrailScene()
 {
-	ID3D11Device* device = Graphics::Instance().GetDevice();
+	ID3D11Device *device = Graphics::Instance().GetDevice();
 	float screenWidth = Graphics::Instance().GetScreenWidth();
 	float screenHeight = Graphics::Instance().GetScreenHeight();
 
 	// カメラ設定
 	camera.SetPerspectiveFov(
-		DirectX::XMConvertToRadians(45),	// 画角
-		screenWidth / screenHeight,			// 画面アスペクト比
-		0.1f,								// ニアクリップ
-		1000.0f								// ファークリップ
+			DirectX::XMConvertToRadians(45), // 画角
+			screenWidth / screenHeight,			 // 画面アスペクト比
+			0.1f,														 // ニアクリップ
+			1000.0f													 // ファークリップ
 	);
 	camera.SetLookAt(
-		{ 8, 3, 0 },		// 視点
-		{ 0, 2, 0 },		// 注視点
-		{ 0, 1, 0 }			// 上ベクトル
+			{8, 3, 0}, // 視点
+			{0, 2, 0}, // 注視点
+			{0, 1, 0}	 // 上ベクトル
 	);
 
 	// モデル読み込み
@@ -37,7 +37,7 @@ void SwordTrailScene::Update(float elapsedTime)
 	character->ComputeAnimation(animationIndex, animationSeconds, nodePoses);
 
 	// アニメーション時間更新
-	const Model::Animation& animation = character->GetAnimations().at(animationIndex);
+	const Model::Animation &animation = character->GetAnimations().at(animationIndex);
 	animationSeconds += elapsedTime;
 	if (animationSeconds > animation.secondsLength)
 	{
@@ -54,31 +54,31 @@ void SwordTrailScene::Update(float elapsedTime)
 
 	// 武器トランスフォーム更新
 	int handNodeIndex = character->GetNodeIndex("B_R_Hand");
-	const Model::Node& handNode = character->GetNodes().at(handNodeIndex);
+	const Model::Node &handNode = character->GetNodes().at(handNodeIndex);
 	weapon->UpdateTransform(handNode.worldTransform);
 
 	// TODO②:保存していた頂点バッファを１フレーム分ずらせ
+	for (int i = MAX_POLYGON - 1; i > 0; --i)
 	{
-
+		trailPositions[0][i] = trailPositions[0][i - 1];
+		trailPositions[1][i] = trailPositions[1][i - 1];
 	}
 
-	// TODO①:剣の根本と先端の座標を取得し、頂点バッファに保存せよ
-	// trailPositions[2][MAX_POLYGON] ← 頂点バッファ
-	{
-		// 剣の原点から根本と先端までのオフセット値
-		DirectX::XMVECTOR RootOffset = DirectX::XMVectorSet(0, 0, 0.3f, 0);
-		DirectX::XMVECTOR TipOffset = DirectX::XMVectorSet(0, 0, 2.3f, 0);
+	// 剣の根本と先端のワールド座標を取得
+	DirectX::XMMATRIX worldMatrix = DirectX::XMLoadFloat4x4(&handNode.worldTransform);
+	DirectX::XMVECTOR rootPos = DirectX::XMVector3Transform(DirectX::XMVectorSet(0, 0, 0.3f, 0), worldMatrix);
+	DirectX::XMVECTOR tipPos = DirectX::XMVector3Transform(DirectX::XMVectorSet(0, 0, 2.3f, 0), worldMatrix);
+	DirectX::XMStoreFloat3(&trailPositions[0][0], rootPos);
+	DirectX::XMStoreFloat3(&trailPositions[1][0], tipPos);
 
-	}
-
-	DirectX::XMFLOAT4 color = { 1, 0, 0, 1 };
+	DirectX::XMFLOAT4 color = {1, 0, 0, 1};
 
 	// ポリゴン作成
-	PrimitiveRenderer* primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
+	PrimitiveRenderer *primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
 	if (!spline)
 	{
 		// 保存していた頂点バッファでポリゴンを作る
-		for (int i = 0; i < MAX_POLYGON; ++i)
+		for (int i = 0; i < MAX_POLYGON - 1; ++i)
 		{
 			primitiveRenderer->AddVertex(trailPositions[0][i], color);
 			primitiveRenderer->AddVertex(trailPositions[1][i], color);
@@ -86,10 +86,22 @@ void SwordTrailScene::Update(float elapsedTime)
 	}
 	else
 	{
-		// TODO③:保存していた頂点バッファを用いてスプライン補完処理を行い、
-		//        滑らかなポリゴンを描画せよ
+		// スプライン補完処理を行い、滑らかなポリゴンを描画
+		for (int i = 0; i < MAX_POLYGON - 3; i++)
 		{
+			for (float t = 0; t <= 1.0f; t += 0.1f)
+			{
+				DirectX::XMVECTOR p0 = DirectX::XMLoadFloat3(&trailPositions[1][i]);
+				DirectX::XMVECTOR p1 = DirectX::XMLoadFloat3(&trailPositions[1][i + 1]);
+				DirectX::XMVECTOR p2 = DirectX::XMLoadFloat3(&trailPositions[1][i + 2]);
+				DirectX::XMVECTOR p3 = DirectX::XMLoadFloat3(&trailPositions[1][i + 3]);
 
+				DirectX::XMVECTOR splinePos = DirectX::XMVectorCatmullRom(p0, p1, p2, p3, t);
+				DirectX::XMFLOAT3 finalPos;
+				DirectX::XMStoreFloat3(&finalPos, splinePos);
+				primitiveRenderer->AddVertex(finalPos, color);
+				primitiveRenderer->AddVertex(trailPositions[0][i], color);
+			}
 		}
 	}
 }
@@ -97,10 +109,10 @@ void SwordTrailScene::Update(float elapsedTime)
 // 描画処理
 void SwordTrailScene::Render(float elapsedTime)
 {
-	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
-	RenderState* renderState = Graphics::Instance().GetRenderState();
-	PrimitiveRenderer* primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
-	ModelRenderer* modelRenderer = Graphics::Instance().GetModelRenderer();
+	ID3D11DeviceContext *dc = Graphics::Instance().GetDeviceContext();
+	RenderState *renderState = Graphics::Instance().GetRenderState();
+	PrimitiveRenderer *primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
+	ModelRenderer *modelRenderer = Graphics::Instance().GetModelRenderer();
 
 	// レンダーステート設定
 	dc->OMSetBlendState(renderState->GetBlendState(BlendState::Opaque), nullptr, 0xFFFFFFFF);

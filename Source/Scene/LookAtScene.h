@@ -24,11 +24,14 @@ public:
 	void DrawGUI() override;
 
 private:
-	Camera								camera;
-	FreeCameraController				cameraController;
-	std::shared_ptr<Model>				character;
-	std::vector<Model::NodePose>		nodePoses;
-	DirectX::XMFLOAT3					headLocalForward = { 0, 0, 1 };
-	DirectX::XMFLOAT3					targetPosition = { 0, 0, 0 };
-	float								animationSeconds = 0;
+	Camera camera;
+	FreeCameraController cameraController;
+	std::shared_ptr<Model> character;
+	std::vector<Model::NodePose> nodePoses;
+	DirectX::XMFLOAT3 headLocalForward = {0, 0, 1};
+	DirectX::XMFLOAT3 targetPosition = {0, 0, 0};
+	float animationSeconds = 0;
+
+	// ルックアット処理関数
+	void LookAtNode(Model::Node &node, const DirectX::XMFLOAT3 &targetPosition, const DirectX::XMFLOAT3 &localForward);
 };

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\2220369\Desktop\Desktop_D\note\3年\前期\ゲープロ\ゲームプログラミングⅤ\External\cereal\unittests\cpp17\variant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\2220369\Desktop\Desktop_D\note\3年\前期\ゲープロ\ゲームプログラミングⅤ\External\cereal\unittests\cpp17\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{AD5BC14C-B408-3A08-849B-FC40056A2261}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

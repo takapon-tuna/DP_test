@@ -8,33 +8,33 @@
 // コンストラクタ
 SphereCastMoveScene::SphereCastMoveScene()
 {
-	ID3D11Device* device = Graphics::Instance().GetDevice();
+	ID3D11Device *device = Graphics::Instance().GetDevice();
 	float screenWidth = Graphics::Instance().GetScreenWidth();
 	float screenHeight = Graphics::Instance().GetScreenHeight();
 
-	position = { 13.0f, 0.5f, 16.0f };
+	position = {13.0f, 0.5f, 16.0f};
 
 	// カメラ設定
 	camera.SetPerspectiveFov(
-		DirectX::XMConvertToRadians(45),	// 画角
-		screenWidth / screenHeight,			// 画面アスペクト比
-		0.1f,								// ニアクリップ
-		1000.0f								// ファークリップ
+			DirectX::XMConvertToRadians(45), // 画角
+			screenWidth / screenHeight,			 // 画面アスペクト比
+			0.1f,														 // ニアクリップ
+			1000.0f													 // ファークリップ
 	);
 	camera.SetLookAt(
-		{ position.x, position.y + 12, position.z + 12 },	// 視点
-		{ position.x, position.y, position.z },				// 注視点
-		{ 0, 1, 0 }			// 上ベクトル
+			{position.x, position.y + 12, position.z + 12}, // 視点
+			{position.x, position.y, position.z},						// 注視点
+			{0, 1, 0}																				// 上ベクトル
 	);
 	cameraController.SyncCameraToController(camera);
 
 	// モデル読み込み
 	character = std::make_shared<Model>(device, "Data/Model/Mr.Incredible/Mr.Incredible.glb");
 	stage = std::make_shared<Model>(device, "Data/Model/Greybox/Greybox.glb");
-	//stage = std::make_shared<Model>(device, "Data/Model/Stage/ExampleStage.glb");
+	// stage = std::make_shared<Model>(device, "Data/Model/Stage/ExampleStage.glb");
 
 	// 頂点データをワールド空間変換し、三角形データを作成
-	for (const Model::Mesh& mesh : stage->GetMeshes())
+	for (const Model::Mesh &mesh : stage->GetMeshes())
 	{
 		DirectX::XMMATRIX WorldTransform = DirectX::XMLoadFloat4x4(&mesh.node->worldTransform);
 		for (size_t i = 0; i < mesh.indices.size(); i += 3)
@@ -60,7 +60,7 @@ SphereCastMoveScene::SphereCastMoveScene()
 			N = DirectX::XMVector3Normalize(N);
 
 			// 三角形データを格納
-			CollisionMesh::Triangle& triangle = collisionMesh.triangles.emplace_back();
+			CollisionMesh::Triangle &triangle = collisionMesh.triangles.emplace_back();
 			DirectX::XMStoreFloat3(&triangle.positions[0], A);
 			DirectX::XMStoreFloat3(&triangle.positions[1], B);
 			DirectX::XMStoreFloat3(&triangle.positions[2], C);
@@ -78,7 +78,7 @@ void SphereCastMoveScene::Update(float elapsedTime)
 
 	// オブジェクト移動操作
 	const float speed = 5.0f * elapsedTime;
-	DirectX::XMFLOAT3 vec = { 0, 0, 0 };
+	DirectX::XMFLOAT3 vec = {0, 0, 0};
 	if (GetAsyncKeyState(VK_UP) & 0x8000)
 	{
 		vec.z += speed;
@@ -98,8 +98,8 @@ void SphereCastMoveScene::Update(float elapsedTime)
 	// カメラの向きを考慮した移動処理
 	DirectX::XMFLOAT3 move;
 	{
-		const DirectX::XMFLOAT3& front = camera.GetFront();
-		const DirectX::XMFLOAT3& right = camera.GetRight();
+		const DirectX::XMFLOAT3 &front = camera.GetFront();
+		const DirectX::XMFLOAT3 &right = camera.GetRight();
 		float frontLengthXZ = sqrtf(front.x * front.x + front.z * front.z);
 		float rightLengthXZ = sqrtf(right.x * right.x + right.z * right.z);
 		float frontX = front.x / frontLengthXZ;
@@ -115,21 +115,21 @@ void SphereCastMoveScene::Update(float elapsedTime)
 	}
 
 	// 移動処理
-	DirectX::XMFLOAT3 moveXZ = { move.x, 0, move.z };
-	DirectX::XMFLOAT3 moveY = { 0, move.y, 0 };
+	DirectX::XMFLOAT3 moveXZ = {move.x, 0, move.z};
+	DirectX::XMFLOAT3 moveY = {0, move.y, 0};
 	MoveAndSlide(moveXZ, false);
 	MoveAndSlide(moveY, true);
-	//MoveAndSlide(move, false);
+	// MoveAndSlide(move, false);
 }
 
 // 描画処理
 void SphereCastMoveScene::Render(float elapsedTime)
 {
-	ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
-	RenderState* renderState = Graphics::Instance().GetRenderState();
-	PrimitiveRenderer* primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
-	ShapeRenderer* shapeRenderer = Graphics::Instance().GetShapeRenderer();
-	ModelRenderer* modelRenderer = Graphics::Instance().GetModelRenderer();
+	ID3D11DeviceContext *dc = Graphics::Instance().GetDeviceContext();
+	RenderState *renderState = Graphics::Instance().GetRenderState();
+	PrimitiveRenderer *primitiveRenderer = Graphics::Instance().GetPrimitiveRenderer();
+	ShapeRenderer *shapeRenderer = Graphics::Instance().GetShapeRenderer();
+	ModelRenderer *modelRenderer = Graphics::Instance().GetModelRenderer();
 
 	// キャラクタートランスフォーム更新
 	DirectX::XMMATRIX WorldTransform = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
@@ -143,13 +143,13 @@ void SphereCastMoveScene::Render(float elapsedTime)
 	dc->RSSetState(renderState->GetRasterizerState(RasterizerState::SolidCullNone));
 
 	// カプセル描画
-	const DirectX::XMFLOAT4 capsuleColor = { 0, 1, 0, 1 };
+	const DirectX::XMFLOAT4 capsuleColor = {0, 1, 0, 1};
 	DirectX::XMMATRIX CapsuleTransform = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
 	DirectX::XMFLOAT4X4 capsuleTransform;
 	DirectX::XMStoreFloat4x4(&capsuleTransform, CapsuleTransform);
 	capsuleTransform._42 += radius + stepOffset * 0.5f;
 	shapeRenderer->DrawCapsule(capsuleTransform, radius, stepOffset, capsuleColor);
-	shapeRenderer->DrawCapsule(capsuleTransform, radius + skinWidth, stepOffset, { 1,0,0,1 });
+	shapeRenderer->DrawCapsule(capsuleTransform, radius + skinWidth, stepOffset, {1, 0, 0, 1});
 	shapeRenderer->Render(dc, camera.GetView(), camera.GetProjection());
 
 	// レンダーステート設定
@@ -187,31 +187,31 @@ void SphereCastMoveScene::DrawGUI()
 
 // スフィアキャスト
 bool SphereCastMoveScene::SphereCast(
-	const DirectX::XMFLOAT3& origin,
-	const DirectX::XMFLOAT3& direction,
-	float radius,
-	float& distance,
-	DirectX::XMFLOAT3& hitPosition,
-	DirectX::XMFLOAT3& hitNormal)
+		const DirectX::XMFLOAT3 &origin,
+		const DirectX::XMFLOAT3 &direction,
+		float radius,
+		float &distance,
+		DirectX::XMFLOAT3 &hitPosition,
+		DirectX::XMFLOAT3 &hitNormal)
 {
 	bool hit = false;
 	DirectX::XMVECTOR Start = DirectX::XMLoadFloat3(&origin);
 	DirectX::XMVECTOR Direction = DirectX::XMLoadFloat3(&direction);
 	DirectX::XMVECTOR End = DirectX::XMVectorAdd(Start, DirectX::XMVectorScale(Direction, distance));
 
-	for (const CollisionMesh::Triangle& triangle : collisionMesh.triangles)
+	for (const CollisionMesh::Triangle &triangle : collisionMesh.triangles)
 	{
 		DirectX::XMVECTOR Positions[3] =
-		{
-			DirectX::XMLoadFloat3(&triangle.positions[0]),
-			DirectX::XMLoadFloat3(&triangle.positions[1]),
-			DirectX::XMLoadFloat3(&triangle.positions[2])
-		};
+				{
+						DirectX::XMLoadFloat3(&triangle.positions[0]),
+						DirectX::XMLoadFloat3(&triangle.positions[1]),
+						DirectX::XMLoadFloat3(&triangle.positions[2])};
 
 		SphereCastResult result;
 		if (IntersectSphereCastVsTriangle(Start, End, radius, Positions, &result))
 		{
-			if (distance < result.distance) continue;
+			if (distance < result.distance)
+				continue;
 			distance = result.distance;
 			DirectX::XMVECTOR HitPosition = DirectX::XMVectorAdd(Start, DirectX::XMVectorScale(Direction, distance));
 			DirectX::XMStoreFloat3(&hitPosition, HitPosition);
@@ -223,7 +223,7 @@ bool SphereCastMoveScene::SphereCast(
 }
 
 // 移動＆滑り
-void SphereCastMoveScene::MoveAndSlide(const DirectX::XMFLOAT3& move, bool vertical)
+void SphereCastMoveScene::MoveAndSlide(const DirectX::XMFLOAT3 &move, bool vertical)
 {
 	DirectX::XMVECTOR Position = DirectX::XMLoadFloat3(&position);
 	DirectX::XMVECTOR Move = DirectX::XMLoadFloat3(&move);
@@ -231,6 +231,63 @@ void SphereCastMoveScene::MoveAndSlide(const DirectX::XMFLOAT3& move, bool verti
 
 	// TODO①:スフィアキャストを用いて移動＆滑り処理を実装する
 	{
+		// 距離を取得
+		for (int ii = 0; ii < 3; ++ii)
+		{
+#pragma region TODO1 スフィアキャストまで
+			float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(Move));
+			if (distance > 0)
+			{
+				// 体の中心からレイを飛ばすので、オフセットする
+				distance += skinWidth;
+				if (vertical)
+					distance += stepOffset;
+				// キャラクターの中心と方向ベクトルを取得してスフィアキャストを行う
+				DirectX::XMVECTOR Direction = DirectX::XMVector3Normalize(Move);
+				DirectX::XMFLOAT3 origin, direction;
+				DirectX::XMStoreFloat3(&origin, DirectX::XMVectorAdd(Position, CenterOffset));
+				DirectX::XMStoreFloat3(&direction, Direction);
+				DirectX::XMFLOAT3 hitPosition, hitNormal;
+				if (SphereCast(origin, direction, radius, distance, hitPosition, hitNormal))
+				{
+					// スフィアキャスト後、ヒット位置を計算するために返ってきた距離に対して
+					// オフセットしていたものを減らす
+					if (vertical)
+						distance -= stepOffset;
+					distance -= skinWidth;
+					// 移動量を算出して位置に加算その際にDirectionを利用する
+					DirectX::XMVECTOR MovedVector = DirectX::XMVectorScale(Direction, distance);
+					Position = DirectX::XMVectorAdd(Position, MovedVector);
+
+					DirectX::XMVECTOR HitNormal = DirectX::XMVector3Normalize(DirectX::XMLoadFloat3(&hitNormal));
+#pragma endregion
+					// 垂直方向だけ坂の角度を算出してsloopLimit以下であれば滑る角度ではないので
+					// その後の処理をスキップする
+					{
+						DirectX::XMVECTOR Up = DirectX::XMVectorSet(0, 1, 0, 0);
+						float radSlopeLimit = DirectX::XMConvertToRadians(slopeLimit);
+						float dotAngle = DirectX::XMVectorGetX(DirectX::XMVector3Dot(Up, HitNormal));
+						float rad = acosf(dotAngle);
+						if (rad < radSlopeLimit)
+							break;
+					}
+					// ここから壁刷り処理を行う
+
+					// 移動後の移動量を算出
+					Move = DirectX::XMVectorSubtract(Move, MovedVector);
+
+					// 次のループでの移動ベクトルを求める
+					float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(HitNormal, Move));
+					Move = DirectX::XMVectorAdd(Move, DirectX::XMVectorScale(HitNormal, -dot)); // 壁刷りベクトルを設定
+				}
+				else
+				{
+					// ヒットしなかったのでそのまま移動させてループを終了
+					Position = DirectX::XMVectorAdd(Position, Move);
+					break;
+				}
+			}
+		}
 	}
 
 	DirectX::XMStoreFloat3(&position, Position);
